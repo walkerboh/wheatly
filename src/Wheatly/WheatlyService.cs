@@ -1,5 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -44,8 +45,17 @@ namespace Wheatly
                 Services = provider
             });
 
+            commands.CommandErrored += Commands_CommandErrored;
+
             commands.RegisterCommands<QuestionsModule>();
             commands.RegisterCommands<SuggestionsModule>();
+            commands.RegisterCommands<TestingModule>();
+        }
+
+        private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs args)
+        {
+            await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
+            Logger.LogError(args.Exception, "Error executing command {CommandName}", args?.Command?.Name);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

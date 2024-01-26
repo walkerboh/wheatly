@@ -13,7 +13,7 @@ namespace Wheatly.Commands
         [Command("submit"), Aliases("s")]
         [GroupCommand]
         [Description("Submit a new bot suggestion")]
-        public async Task SubmitSuggestion(CommandContext ctx, [RemainingText] string text)
+        public async Task SubmitSuggestion(CommandContext ctx, [RemainingText] [Description("Text of your suggestion")] string text)
         {
             logger.LogInformation("SubmitSuggestion triggered");
             if (string.IsNullOrEmpty(text))

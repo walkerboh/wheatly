@@ -13,7 +13,7 @@ namespace Wheatly.Commands
         [Command("submit"), Aliases("s")]
         [GroupCommand]
         [Description("Submit a new potential question for the Extra Life interview")]
-        public async Task SubmitQuestion(CommandContext ctx, [RemainingText] string text)
+        public async Task SubmitQuestion(CommandContext ctx, [RemainingText] [Description("Text of your suggested question")] string text)
         {
             logger.LogInformation("SubmitQuestion triggered");
             if (string.IsNullOrEmpty(text))

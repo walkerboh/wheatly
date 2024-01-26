@@ -396,3 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# EF Deploy Script
+/src/Wheatly/script.sql
