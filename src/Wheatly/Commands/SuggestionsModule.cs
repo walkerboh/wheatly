@@ -1,6 +1,5 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using Microsoft.Extensions.Logging;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
@@ -22,7 +21,7 @@ namespace Wheatly.Commands
             }
             else
             {
-                await suggestionsService.SubmitSuggestion(ctx.ToUser(), text);
+                await suggestionsService.SubmitSuggestionAsync(ctx.ToUser(), text, DateTime.UtcNow);
                 await ctx.RespondAsync("Thank you for your suggestion!");
             }
         }

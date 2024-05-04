@@ -1,6 +1,5 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using Microsoft.Extensions.Logging;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
@@ -22,7 +21,7 @@ namespace Wheatly.Commands
             }
             else
             {
-                await questionsService.SubmitQuestion(ctx.ToUser(), text);
+                await questionsService.SubmitQuestionAsync(ctx.ToUser(), text, DateTime.UtcNow);
                 await ctx.RespondAsync("Thank you for your question!");
             }
         }
@@ -32,7 +31,7 @@ namespace Wheatly.Commands
         public async Task QuestionCount(CommandContext ctx)
         {
             logger.LogInformation("QuestionCount triggered");
-            var count = questionsService.GetTotalCount();
+            var count = await questionsService.GetTotalCountAsync();
             await ctx.RespondAsync($"There are {count} questions total.");
         }
 
@@ -41,7 +40,7 @@ namespace Wheatly.Commands
         public async Task MyQuestionCount(CommandContext ctx)
         {
             logger.LogInformation("MyQuestionCount triggered");
-            var count = questionsService.GetUserCount(ctx.User.Id);
+            var count = await questionsService.GetUserCountAsync(ctx.User.Id);
             await ctx.RespondAsync($"You have submitted {count} questions.");
         }
     }

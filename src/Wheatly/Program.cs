@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Wheatly.Configuration;
 using Wheatly.Database;
@@ -17,11 +15,18 @@ namespace Wheatly
                 .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            await Host.CreateDefaultBuilder()
+            var builder = WebApplication.CreateBuilder();
+
+            builder.Host
                 .UseSerilog()
                 .UseConsoleLifetime()
-                .ConfigureServices(ConfigureServices)
-                .RunConsoleAsync();
+                .ConfigureServices(ConfigureServices);
+
+            var app = builder.Build();
+
+            app.MapGet("/questions", async (WheatlyContext context) => await context.Questions.ToListAsync());
+
+            await app.RunAsync();
 
             await Log.CloseAndFlushAsync();
         }
@@ -31,7 +36,7 @@ namespace Wheatly
             services.AddLogging(logging => logging.ClearProviders().AddSerilog())
                 .AddOptions()
                 .Configure<DiscordClientConfiguration>(hostContext.Configuration.GetSection("DiscordClientSettings"))
-                .AddDbContext<WheatlyContext>()
+                .AddDbContextFactory<WheatlyContext>()
                 .AddTransient<QuestionsService>()
                 .AddTransient<SuggestionsService>()
                 .AddHostedService<WheatlyService>();

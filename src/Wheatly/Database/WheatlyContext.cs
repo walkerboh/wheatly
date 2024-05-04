@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Wheatly.Database.Entities;
 
 namespace Wheatly.Database
@@ -9,7 +8,7 @@ namespace Wheatly.Database
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var db = configuration.GetConnectionString("WheatlyContext");
-            optionsBuilder.UseMySql(db, ServerVersion.AutoDetect(db));
+            optionsBuilder.UseNpgsql(db);
         }
 
         public DbSet<Question> Questions { get; set; }

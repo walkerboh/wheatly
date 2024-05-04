@@ -1,23 +1,31 @@
-﻿using Wheatly.Database;
+﻿using Microsoft.EntityFrameworkCore;
+using Wheatly.Database;
 using Wheatly.Database.Entities;
 using Wheatly.Entities;
 
 namespace Wheatly.Services
 {
-    public class QuestionsService(WheatlyContext context)
+    public class QuestionsService(IDbContextFactory<WheatlyContext> dbFactory)
     {
-        private readonly WheatlyContext _context = context;
-
-        public int GetTotalCount() => _context.Questions.Count();
-
-        public int GetUserCount(ulong userId) => _context.Questions.Count(q => q.UserId == userId);
-
-        public async Task SubmitQuestion(User user, string text)
+        public async Task<int> GetTotalCountAsync()
         {
-            var question = new Question(user.UserId, user.UserName, user.DisplayName, text);
+            await using var context = await dbFactory.CreateDbContextAsync();
+            return context.Questions.Count();
+        }
 
-            _context.Questions.Add(question);
-            await _context.SaveChangesAsync();
+        public async Task<int> GetUserCountAsync(ulong userId)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync();
+            return context.Questions.Count(q => q.UserId == userId);
+        }
+
+        public async Task SubmitQuestionAsync(User user, string text, DateTime submittedAt)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync();
+            var question = new Question(user.UserId, user.UserName, user.DisplayName, text, submittedAt);
+
+            context.Questions.Add(question);
+            await context.SaveChangesAsync();
         }
     }
 }

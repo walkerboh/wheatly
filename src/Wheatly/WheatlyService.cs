@@ -1,8 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.Entities;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Wheatly.Commands;
@@ -45,11 +42,18 @@ namespace Wheatly
                 Services = provider
             });
 
+            commands.CommandExecuted += Commands_CommandExecuted;
             commands.CommandErrored += Commands_CommandErrored;
 
             commands.RegisterCommands<QuestionsModule>();
             commands.RegisterCommands<SuggestionsModule>();
             commands.RegisterCommands<TestingModule>();
+        }
+
+        private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs args)
+        {
+            Logger.LogInformation("Command {command} executed", args.Command.Name);
+            return Task.CompletedTask;
         }
 
         private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs args)
