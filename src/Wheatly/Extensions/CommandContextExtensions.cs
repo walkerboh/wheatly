@@ -1,4 +1,4 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.Commands;
 using Wheatly.Entities;
 
 namespace Wheatly.Extensions

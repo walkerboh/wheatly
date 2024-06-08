@@ -4,5 +4,6 @@
     {
         public string? Token { get; set; }
         public string[]? Prefixes { get; set; }
+        public ulong? DebugGuildId { get; set; }
     }
 }

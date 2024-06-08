@@ -1,15 +1,17 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+﻿using DSharpPlus.Commands;
+using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.Trees.Metadata;
+using System.ComponentModel;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
 namespace Wheatly.Commands
 {
-    [Group("teamName"), Aliases("tn")]
+    [Command("teamname"), TextAlias("tn")]
     [Description("Commands to get random team names")]
-    public class TeamNameModule(TeamNameService teamNameService, ILogger<TeamNameModule> logger) : BaseCommandModule
+    public class TeamNameModule(TeamNameService teamNameService)
     {
-        [Command("submit"), Aliases("s")]
+        [Command("submit"), TextAlias("s")]
         [Description("Submit a name to the pool of team names")]
         public async Task SubmitTeamName(CommandContext ctx, [RemainingText] string text)
         {
@@ -24,8 +26,8 @@ namespace Wheatly.Commands
             }
         }
 
-        [GroupCommand]
-        [Command("get"), Aliases("g")]
+        [DefaultGroupCommand]
+        [Command("get"), TextAlias("g")]
         [Description("Get a random team name from the pool of submitted names")]
         public async Task GetTeamName(CommandContext ctx, [Description("Optional maximum length for the selected team name")] int? maxLength = null)
         {

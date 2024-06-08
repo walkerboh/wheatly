@@ -1,99 +1,94 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Exceptions;
-using DSharpPlus.Entities;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Exceptions;
+using DSharpPlus.Commands.Processors.TextCommands;
 using Microsoft.Extensions.Options;
-using Serilog;
-using Wheatly.Attributes;
-using Wheatly.Commands;
 using Wheatly.Configuration;
+using Wheatly.ContextChecks;
+using Wheatly.Extensions;
 
 namespace Wheatly
 {
     public class WheatlyService : IHostedService
     {
         private ILogger<WheatlyService> Logger { get; set; }
-        private DiscordClient DiscordClient { get; set; }
+        private DiscordClientConfiguration DiscordClientOptions { get; set; }
+        private DiscordClient Client { get; set; }
 
-        public WheatlyService(IServiceProvider provider, ILogger<WheatlyService> logger, IOptions<DiscordClientConfiguration> options)
+        public WheatlyService(ILogger<WheatlyService> logger, IOptions<DiscordClientConfiguration> options, DiscordClient discordClient)
         {
             Logger = logger;
-
-            var clientConfig = options.Value;
-
-            if(string.IsNullOrEmpty(clientConfig.Token))
-            {
-                throw new Exception("ClienfConfig.Token is missing");
-            }
-
-            if(clientConfig.Prefixes == null || clientConfig.Prefixes.Length == 0)
-            {
-                throw new Exception("ClientConfig.Prefixes is null or empty");
-            }
-
-            DiscordClient = new(new()
-            {
-                Token = clientConfig.Token,
-                TokenType = TokenType.Bot,
-                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
-                LoggerFactory = new LoggerFactory().AddSerilog()
-            });
-
-            var commands = DiscordClient.UseCommandsNext(new()
-            {
-                StringPrefixes = clientConfig.Prefixes,
-                Services = provider
-            });
-
-            commands.CommandExecuted += Commands_CommandExecuted;
-            commands.CommandErrored += Commands_CommandErrored;
-
-            commands.RegisterCommands<QuestionsModule>();
-            commands.RegisterCommands<SuggestionsModule>();
-            commands.RegisterCommands<TestingModule>();
-            commands.RegisterCommands<TeamNameModule>();
-        }
-
-        private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs args)
-        {
-            Logger.LogInformation("Command {command} executed", args.Command.Name);
-            return Task.CompletedTask;
-        }
-
-        private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs args)
-        {
-            var failedChecks = ((ChecksFailedException)args.Exception).FailedChecks;
-
-            foreach(var failedCheck in failedChecks)
-            {
-                if(failedCheck is RequireChannelAttribute channelAttribute)
-                {
-                    try
-                    {
-                        await args.Context.RespondAsync($"This command is not usable in this channel.");
-                    }
-                    catch(Exception e)
-                    {
-                        var t = e.Message;
-                    }
-                    return;
-                }
-            }
-
-            await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
-            Logger.LogError(args.Exception, "Error executing command {CommandName}", args?.Command?.Name);
+            DiscordClientOptions = options.Value;
+            Client = discordClient;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            Logger.LogInformation("Client setup starting");
+
+            CommandsExtension commandsExtension = Client.UseCommands(new()
+            {
+                DebugGuildId = DiscordClientOptions.DebugGuildId ?? 0,
+                UseDefaultCommandErrorHandler = false
+            });
+
+            commandsExtension.CommandExecuted += CommandsExtension_CommandExecuted;
+            commandsExtension.CommandErrored += CommandsExtension_CommandErrored;
+
+            commandsExtension.AddCommands(typeof(Program).Assembly);
+
+            commandsExtension.AddCheck<RequiredChannelCheck>();
+
+            TextCommandProcessor textCommandProcessor = new(new());
+
+            await commandsExtension.AddProcessorAsync(textCommandProcessor);
+
             Logger.LogInformation("Wheatly is connecting");
-            await DiscordClient.ConnectAsync();
+            await Client.ConnectAsync();
+        }
+
+        private async Task CommandsExtension_CommandErrored(CommandsExtension sender, DSharpPlus.Commands.EventArgs.CommandErroredEventArgs args)
+        {
+            var failedChecks = ((ChecksFailedException)args.Exception).Errors;
+
+            foreach (var failedCheck in failedChecks)
+            {
+                if (failedCheck.ContextCheckAttribute is RequiredChannelAttribute channelAttribute)
+                {
+                    if (channelAttribute.AllowedGuildChannels.TryGetValue(args.Context.Guild?.Id ?? 0, out var channelId))
+                    {
+                        await args.Context.RespondAsync($"This command is not uable in this channel, try: {channelId.ToChannelMention()}");
+                    }
+                    else
+                    {
+                        await args.Context.RespondAsync($"This command is not usable in this server.");
+                    }
+
+                    return;
+                }
+            }
+
+            if (args.Exception is CommandNotFoundException)
+            {
+                await args.Context.RespondAsync("That doesn't seem like an actual command...");
+                Logger.LogError(args.Exception, "Error finding command");
+                return;
+            }
+
+            await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
+            Logger.LogError(args.Exception, "Error executing command {CommandName}", args.Context.Command.Name);
+        }
+
+        private Task CommandsExtension_CommandExecuted(CommandsExtension sender, DSharpPlus.Commands.EventArgs.CommandExecutedEventArgs args)
+        {
+            Logger.LogInformation("Command {command} executed", args.Context.Command.Name);
+            return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("Wheatly is disconnecting");
-            await DiscordClient.DisconnectAsync();
+            await Client.DisconnectAsync();
         }
     }
 }

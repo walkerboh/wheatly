@@ -1,19 +1,21 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using Wheatly.Attributes;
+﻿using DSharpPlus.Commands;
+using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.Trees.Metadata;
+using System.ComponentModel;
+using Wheatly.ContextChecks;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
 namespace Wheatly.Commands
 {
-    [Group("question"), Aliases("q")]
+    [Command("question"), TextAlias("q")]
     [Description("Commands about Extra Life questions. Can only be run in #interview-questions")]
-    [RequireChannel(1236442191161983027)]
-    public class QuestionsModule(QuestionsService questionsService, ILogger<QuestionsModule> logger) : BaseCommandModule
+    public class QuestionsModule(QuestionsService questionsService, ILogger<QuestionsModule> logger)
     {
-        [Command("submit"), Aliases("s")]
-        [GroupCommand]
+        [Command("submit"), TextAlias("s")]
+        [DefaultGroupCommand]
         [Description("Submit a new potential question for the Extra Life interview")]
+        [RequiredChannel("251851170988032000-1249110617738973214", "123917893447450628-1236442191161983027")]
         public async Task SubmitQuestion(CommandContext ctx, [RemainingText] [Description("Text of your suggested question")] string text)
         {
             logger.LogInformation("SubmitQuestion triggered");
@@ -28,7 +30,7 @@ namespace Wheatly.Commands
             }
         }
 
-        [Command("count"), Aliases("c")]
+        [Command("count"), TextAlias("c")]
         [Description("Get the total count of submitted questions")]
         public async Task QuestionCount(CommandContext ctx)
         {
@@ -37,7 +39,7 @@ namespace Wheatly.Commands
             await ctx.RespondAsync($"There are {count} questions total.");
         }
 
-        [Command("myCount"), Aliases("mc")]
+        [Command("myCount"), TextAlias("mc")]
         [Description("Get the count of questions you have submitted")]
         public async Task MyQuestionCount(CommandContext ctx)
         {

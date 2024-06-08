@@ -1,16 +1,18 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+﻿using DSharpPlus.Commands;
+using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.Trees.Metadata;
+using System.ComponentModel;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
 namespace Wheatly.Commands
 {
-    [Group("suggestion"), Aliases("s")]
+    [Command("suggestion"), TextAlias("s")]
     [Description("Commands about bot suggestions")]
-    public class SuggestionsModule(SuggestionsService suggestionsService, ILogger<SuggestionsModule> logger) : BaseCommandModule
+    public class SuggestionsModule(SuggestionsService suggestionsService, ILogger<SuggestionsModule> logger)
     {
-        [Command("submit"), Aliases("s")]
-        [GroupCommand]
+        [Command("submit"), TextAlias("s")]
+        [DefaultGroupCommand]
         [Description("Submit a new bot suggestion")]
         public async Task SubmitSuggestion(CommandContext ctx, [RemainingText] [Description("Text of your suggestion")] string text)
         {

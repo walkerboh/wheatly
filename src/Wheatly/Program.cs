@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DSharpPlus;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Commands.Processors.TextCommands;
+using DSharpPlus.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Wheatly.Configuration;
 using Wheatly.Database;
@@ -33,9 +37,18 @@ namespace Wheatly
 
         private static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services)
         {
+            var token = Environment.GetEnvironmentVariable("DiscordClientSettings__Token");
+
+            if(string.IsNullOrWhiteSpace(token))
+            {
+                Console.WriteLine("Error: No discord token found.");
+                Environment.Exit(1);
+            }
+
             services.AddLogging(logging => logging.ClearProviders().AddSerilog())
                 .AddOptions()
                 .Configure<DiscordClientConfiguration>(hostContext.Configuration.GetSection("DiscordClientSettings"))
+                .AddDiscordClient(token, DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | TextCommandProcessor.RequiredIntents | SlashCommandProcessor.RequiredIntents)
                 .AddDbContextFactory<WheatlyContext>()
                 .AddTransient<QuestionsService>()
                 .AddTransient<SuggestionsService>()
