@@ -39,6 +39,8 @@ namespace Wheatly
                 .AddDbContextFactory<WheatlyContext>()
                 .AddTransient<QuestionsService>()
                 .AddTransient<SuggestionsService>()
+                .AddTransient<TeamNameService>()
+                .AddSingleton<Random>()
                 .AddHostedService<WheatlyService>();
         }
     }

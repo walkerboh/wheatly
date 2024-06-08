@@ -13,5 +13,6 @@ namespace Wheatly.Database
 
         public DbSet<Question> Questions { get; set; }
         public DbSet<Suggestion> Suggestions { get; set; }
+        public DbSet<TeamName> TeamNames { get; set; }
     }
 }

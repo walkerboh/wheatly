@@ -1,12 +1,14 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using Wheatly.Attributes;
 using Wheatly.Extensions;
 using Wheatly.Services;
 
 namespace Wheatly.Commands
 {
     [Group("question"), Aliases("q")]
-    [Description("Commands about Extra Life questions")]
+    [Description("Commands about Extra Life questions. Can only be run in #interview-questions")]
+    [RequireChannel(1236442191161983027)]
     public class QuestionsModule(QuestionsService questionsService, ILogger<QuestionsModule> logger) : BaseCommandModule
     {
         [Command("submit"), Aliases("s")]

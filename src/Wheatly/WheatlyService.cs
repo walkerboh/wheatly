@@ -1,7 +1,10 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Entities;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Wheatly.Attributes;
 using Wheatly.Commands;
 using Wheatly.Configuration;
 
@@ -48,6 +51,7 @@ namespace Wheatly
             commands.RegisterCommands<QuestionsModule>();
             commands.RegisterCommands<SuggestionsModule>();
             commands.RegisterCommands<TestingModule>();
+            commands.RegisterCommands<TeamNameModule>();
         }
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs args)
@@ -58,6 +62,24 @@ namespace Wheatly
 
         private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs args)
         {
+            var failedChecks = ((ChecksFailedException)args.Exception).FailedChecks;
+
+            foreach(var failedCheck in failedChecks)
+            {
+                if(failedCheck is RequireChannelAttribute channelAttribute)
+                {
+                    try
+                    {
+                        await args.Context.RespondAsync($"This command is not usable in this channel.");
+                    }
+                    catch(Exception e)
+                    {
+                        var t = e.Message;
+                    }
+                    return;
+                }
+            }
+
             await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
             Logger.LogError(args.Exception, "Error executing command {CommandName}", args?.Command?.Name);
         }
