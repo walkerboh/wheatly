@@ -49,22 +49,23 @@ namespace Wheatly
 
         private async Task CommandsExtension_CommandErrored(CommandsExtension sender, DSharpPlus.Commands.EventArgs.CommandErroredEventArgs args)
         {
-            var failedChecks = ((ChecksFailedException)args.Exception).Errors;
-
-            foreach (var failedCheck in failedChecks)
+            if (args.Exception is ChecksFailedException checksFailedException)
             {
-                if (failedCheck.ContextCheckAttribute is RequiredChannelAttribute channelAttribute)
+                foreach (var failedCheck in checksFailedException.Errors)
                 {
-                    if (channelAttribute.AllowedGuildChannels.TryGetValue(args.Context.Guild?.Id ?? 0, out var channelId))
+                    if (failedCheck.ContextCheckAttribute is RequiredChannelAttribute channelAttribute)
                     {
-                        await args.Context.RespondAsync($"This command is not uable in this channel, try: {channelId.ToChannelMention()}");
-                    }
-                    else
-                    {
-                        await args.Context.RespondAsync($"This command is not usable in this server.");
-                    }
+                        if (channelAttribute.AllowedGuildChannels.TryGetValue(args.Context.Guild?.Id ?? 0, out var channelId))
+                        {
+                            await args.Context.RespondAsync($"This command is not uable in this channel, try: {channelId.ToChannelMention()}");
+                        }
+                        else
+                        {
+                            await args.Context.RespondAsync($"This command is not usable in this server.");
+                        }
 
-                    return;
+                        return;
+                    }
                 }
             }
 
@@ -76,7 +77,7 @@ namespace Wheatly
             }
 
             await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
-            Logger.LogError(args.Exception, "Error executing command {CommandName}", args.Context.Command.Name);
+            Logger.LogError(args.Exception, "Error executing command: {CommandName}", args.Context.Command.Name);
         }
 
         private Task CommandsExtension_CommandExecuted(CommandsExtension sender, DSharpPlus.Commands.EventArgs.CommandExecutedEventArgs args)
