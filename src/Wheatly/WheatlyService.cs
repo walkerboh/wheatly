@@ -7,6 +7,7 @@ using Serilog;
 using Wheatly.Attributes;
 using Wheatly.Commands;
 using Wheatly.Configuration;
+using Wheatly.Extensions;
 
 namespace Wheatly
 {
@@ -70,7 +71,7 @@ namespace Wheatly
                 {
                     try
                     {
-                        await args.Context.RespondAsync($"This command is not usable in this channel.");
+                        await args.Context.RespondAsync($"This command is not usable in this channel. Try: {channelAttribute.ChannelId.ToChannelMention()}");
                     }
                     catch(Exception e)
                     {

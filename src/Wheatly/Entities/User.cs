@@ -6,6 +6,6 @@ namespace Wheatly.Entities
     {
         public ulong UserId { get; set; } = ctx.User.Id;
         public string UserName { get; set; } = ctx.User.Username;
-        public string? DisplayName { get; set; } = ctx.Guild?.Name;
+        public string? DisplayName { get; set; } = ctx.Member?.DisplayName;
     }
 }
