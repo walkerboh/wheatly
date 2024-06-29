@@ -53,6 +53,7 @@ namespace Wheatly
             commands.RegisterCommands<SuggestionsModule>();
             commands.RegisterCommands<TestingModule>();
             commands.RegisterCommands<TeamNameModule>();
+            commands.RegisterCommands<RandomModule>();
         }
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs args)
@@ -63,26 +64,30 @@ namespace Wheatly
 
         private async Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs args)
         {
-            var failedChecks = ((ChecksFailedException)args.Exception).FailedChecks;
-
-            foreach(var failedCheck in failedChecks)
+            if (args.Exception is ChecksFailedException checksFailedException)
             {
-                if(failedCheck is RequireChannelAttribute channelAttribute)
+                var failedChecks = checksFailedException.FailedChecks;
+
+                foreach (var failedCheck in failedChecks)
                 {
-                    try
+                    if (failedCheck is RequireChannelAttribute channelAttribute)
                     {
-                        await args.Context.RespondAsync($"This command is not usable in this channel. Try: {channelAttribute.ChannelId.ToChannelMention()}");
+                        try
+                        {
+                            await args.Context.RespondAsync($"This command is not usable in this channel. Try: {channelAttribute.ChannelId.ToChannelMention()}");
+                        }
+                        catch (Exception e)
+                        {
+                            var t = e.Message;
+                        }
                     }
-                    catch(Exception e)
-                    {
-                        var t = e.Message;
-                    }
-                    return;
                 }
             }
-
-            await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
-            Logger.LogError(args.Exception, "Error executing command {CommandName}", args?.Command?.Name);
+            else
+            {
+                await args.Context.RespondAsync("Sorry, an error occurred. Please try again later... or yell at Evan.");
+                Logger.LogError(args.Exception, "Error executing command {CommandName}", args?.Command?.Name);
+            }
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
